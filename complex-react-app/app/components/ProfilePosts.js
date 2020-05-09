@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import Axios from "axios";
+import LoadingDotsIcon from './LoadingDotsIcon';
 
 const ProfilePosts = () => {
   const { username } = useParams();
@@ -8,9 +9,15 @@ const ProfilePosts = () => {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
+    //Usar para cancelar o call do axios se o usuario
+    //clicar em um link
+    const ourRequest = Axios.CancelToken.source();
     const fetchPosts = async () => {
       try {
-        const res = await Axios.get(`/profile/${username}/posts`);
+        const res = await Axios.get(
+          `/profile/${username}/posts`, 
+          { cancelToken: ourRequest.token }
+        );
         setIsLoading(false);
         setPosts(res.data);
       } catch (e) {
@@ -18,9 +25,14 @@ const ProfilePosts = () => {
       }
     };
     fetchPosts();
+    return () => {
+      //cancela o chamada do axios quando o usuário
+      //clicou em algum link antes do resultado chegar
+      ourRequest.cancel();
+    }
   }, []);
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <LoadingDotsIcon />
 
   return (
     <div className="list-group">

@@ -18,17 +18,25 @@ const Profile = () => {
   });
 
   useEffect(() => {
+    const ourRequest = Axios.CancelToken.source();
     const fetchData = async () => {
       try {
-        const res = await Axios.post(`/profile/${username}`, {
-          token: appState.user.token
-        });
+        const res = await Axios.post(
+          `/profile/${username}`, 
+          { token: appState.user.token }, 
+          { cancelToken: ourRequest.token }
+        );
         setProfileData(res.data)
       } catch (e) {
         console.log('There was a problem.');
       }
     }
     fetchData();
+    return () => {
+      //cancela o chamada do axios quando o usuário
+      //clicou em algum link antes do resultado chegar
+      ourRequest.cancel();
+    }
   }, []);
 
   return (
