@@ -5,6 +5,7 @@ import Page from './Page';
 import LoadingDotsIcon from './LoadingDotsIcon';
 import ReactMarkdown from 'react-markdown';
 import ReactTooltip from 'react-tooltip';
+import NotFound from './NotFound';
 
 const ViewSinglePost = () => {
 
@@ -34,6 +35,9 @@ const ViewSinglePost = () => {
     }
   }, []);
 
+  if (!isLoading && !post) {
+    return <NotFound />
+  }
   if (isLoading) 
     return (
       <Page title="..."><LoadingDotsIcon /></Page>
@@ -46,14 +50,14 @@ const ViewSinglePost = () => {
       <div className="d-flex justify-content-between">
         <h2>{post.title}</h2>
         <span className="pt-2">
-          <a 
+          <Link 
             data-tip="Edit"
             data-for="edit"
-            href="#" 
+            to={`/post/${post._id}/edit`}
             className="text-primary mr-2" 
           >
             <i className="fas fa-edit"></i>
-          </a>
+          </Link>
           <ReactTooltip id="edit" className="custom-tooltip"/>
           {" "}
           <a 
