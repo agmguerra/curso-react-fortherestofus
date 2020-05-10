@@ -14,6 +14,7 @@ const ViewSinglePost = () => {
   const [post, setPost] = useState();
 
   useEffect(() => {
+    // criado para permitir o cancelamento
     const ourRequest = Axios.CancelToken.source();
     const fetchPost = async () => {
       try {
