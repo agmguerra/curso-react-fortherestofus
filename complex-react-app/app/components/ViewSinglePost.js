@@ -35,7 +35,7 @@ const ViewSinglePost = (props) => {
       //clicou em algum link antes do resultado chegar
       ourRequest.cancel();
     };
-  }, []);
+  }, [id]);
 
   if (!isLoading && !post) {
     return <NotFound />;
