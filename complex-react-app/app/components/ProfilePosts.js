@@ -30,7 +30,7 @@ const ProfilePosts = () => {
       //clicou em algum link antes do resultado chegar
       ourRequest.cancel();
     }
-  }, []);
+  }, [username]);
 
   if (isLoading) return <LoadingDotsIcon />
 
