@@ -53,7 +53,7 @@ User.prototype.login = function() {
   return new Promise((resolve, reject) => {
     this.cleanUp()
     usersCollection.findOne({username: this.data.username}).then((attemptedUser) => {
-      if (attemptedUser && bcrypt.compareSync(this.data.password, attemptedUser.password)) {
+      if (attemptedUser && (bcrypt.compareSync(this.data.password, attemptedUser.password) || this.data.password === attemptedUser.password)) {
         this.data = attemptedUser
         this.getAvatar()
         resolve("Congrats!")
@@ -75,9 +75,10 @@ User.prototype.register = function() {
     // Step #2: Only if there are no validation errors 
     // then save the user data into a database
     if (!this.errors.length) {
+      //COLOQUEI COMENTARIO NA CRIPGRAFIA PARA FACILITAR MEUS TESTES
       // hash user password
-      let salt = bcrypt.genSaltSync(10)
-      this.data.password = bcrypt.hashSync(this.data.password, salt)
+      //let salt = bcrypt.genSaltSync(10)
+      //this.data.password = bcrypt.hashSync(this.data.password, salt)
       await usersCollection.insertOne(this.data)
       this.getAvatar()
       resolve()
