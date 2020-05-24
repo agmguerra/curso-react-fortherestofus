@@ -23,6 +23,7 @@ import Profile from "./components/Profile";
 import EditPost from "./components/EditPost";
 import NotFound from "./components/NotFound";
 import Search from "./components/Search";
+import Chat from './components/Chat';
 
 const Main = () => {
   const initialState = {
@@ -33,7 +34,8 @@ const Main = () => {
       username: localStorage.getItem("complexappUsername"),
       avatar: localStorage.getItem("complexappAvatar"),
     },
-    isSearchOpen: false
+    isSearchOpen: false,
+    isChatOpen: false
   };
 
   const ourReducer = (draft, action) => {
@@ -53,6 +55,12 @@ const Main = () => {
         return;
       case 'closeSearch':
         draft.isSearchOpen = false;
+        return;
+      case 'toggleChat':
+        draft.isChatOpen = !draft.isChatOpen;
+        return;
+      case 'closeChat':
+        draft.isChatOpen = false;
         return;
     }
   };
@@ -111,6 +119,7 @@ const Main = () => {
           >
             <Search />
           </CSSTransition>
+          <Chat />
           <Footer />
         </BrowserRouter>
       </DispatchContext.Provider>
