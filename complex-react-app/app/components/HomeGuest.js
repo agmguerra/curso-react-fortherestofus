@@ -1,27 +1,125 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import Axios from "axios";
 import Page from "./Page";
+import { useImmerReducer } from 'use-immer';
+import { CSSTransition } from 'react-transition-group'
 
 const HomeGuest = () => {
 
-  const [username, setUsername] = useState();
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
+  const initialState = {
+    username: {
+      value: '',
+      hasErrors: false,
+      message: '',
+      isUnique: false,
+      checkCount: 0
+    },
+    email: {
+      value: '',
+      hasErrors: false,
+      message: '',
+      isUnique: false,
+      checkCount: 0
+    },
+    password: {
+      value: '',
+      hasErrors: false,
+      message: '',
+      checkCount: 0
+    },
+    submitCount: 0
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    try {
-      await Axios.post("/register", {
-        username,
-        email,
-        password,
-      });
-      console.log("User was succesfully created.");
-    } catch (error) {
-      console.log("There was an error.");
+  const ourReducer = (draft, action) => {
+    switch (action.type) {
+      case 'usernameImmediately':
+        draft.username.hasErrors = false
+        draft.username.value = action.value
+        if (draft.username.value.length > 30) {
+          draft.username.hasErrors = true;
+          draft.username.message = 'Username cannot exceed 30 characters.'
+        }
+        if (draft.username.value && !/^([a-zA-z0-9]+)$/.test(draft.username.value)) {
+          draft.username.hasErrors = true
+          draft.username.message = 'Username can only contain letters and numbers.'
+        }
+        return;
+      case 'usernameAfterDelay':
+        if (draft.username.value.length < 3) {
+          draft.username.hasErrors = true
+          draft.username.message = 'Username must be at least 3 characters.'
+        }
+        if (!draft.hasErrors) {
+          draft.username.checkCount++
+        }
+        return;
+      case 'usernameUniqueResults':
+        if (action.value) {
+          draft.username.hasErrors = true
+          draft.username.isUnique = false
+          draft.username.message = 'That username is already taken.'
+        } else {
+          draft.username.isUnique = true
+        }
+        return;
+      case 'emailImmediately':
+        draft.username.hasErrors = false
+        draft.username.value = action.value
+        return;
+      case 'emailAfterDelay': 
+        return ;
+      case 'emailUniqueResults':
+        return;
+      case 'passwordImmediately':
+        draft.username.hasErrors = false
+        draft.username.value = action.value
+        return;
+      case 'passwordAfterDelay':
+        return;
+      case 'submitForm':
+        return;
     }
+  }
+
+  const [state, dispatch] = useImmerReducer(ourReducer, initialState);
+
+  useEffect(() => {
+    if (state.username.value) {
+      const delay = setTimeout(() => dispatch({
+        type: 'usernameAfterDelay'
+      }), 800)
+
+      return () => clearTimeout(delay)
+    }
+  }, [state.username.value])
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
   };
+
+  useEffect(() => {
+    if (state.username.checkCount) {
+      const ourRequest = Axios.CancelToken.source();
+      const fetchResults = async () => {
+        try {
+          const res = await Axios.post('/doesUsernameExist', {
+            username: state.username.value
+          }, 
+          {
+            cancelToken: ourRequest.token
+          });
+          
+          dispatch({ type: 'usernameUniqueResults', value: res.data })
+          
+        } catch (e) {
+          console.log('There was problem or the request was cancelled');    
+        }
+      } 
+      fetchResults();
+      return () => ourRequest.cancel();
+    }
+    
+  }, [state.username.checkCount]);
 
   return (
     <Page title="Welcome" wide={true}>
@@ -37,20 +135,32 @@ const HomeGuest = () => {
                 <small>Username</small>
               </label>
               <input 
-                onChange={e => setUsername(e.target.value)} id="username-register" 
+                onChange={e => dispatch({ type: "usernameImmediately", value: e.target.value})} id="username-register" 
                 name="username" 
                 className="form-control" 
                 type="text" 
                 placeholder="Pick a username" 
                 autoComplete="off" 
               />
+              <CSSTransition 
+                in={state.username.hasErrors} 
+                timeout={330}
+                classNames="liveValidateMessage"
+                unmountOnExit
+              >
+                <div 
+                  className="alert alert-danger small liveValidateMessage"
+                >
+                  {state.username.message}
+                </div>
+              </CSSTransition>
             </div>
             <div className="form-group">
               <label htmlFor="email-register" className="text-muted mb-1">
                 <small>Email</small>
               </label>
               <input 
-                onChange={e => setEmail(e.target.value)}  
+                onChange={e => dispatch({ type: "emailImmediately", value: e.target.value})}  
                 id="email-register" 
                 name="email" 
                 className="form-control" 
@@ -64,7 +174,7 @@ const HomeGuest = () => {
                 <small>Password</small>
               </label>
               <input 
-                onChange={e => setPassword(e.target.value)}   id="password-register" name="password" className="form-control" 
+                onChange={e => dispatch({ type: "passwordImmediately", value: e.target.value})}  id="password-register" name="password" className="form-control" 
                 type="password" 
                 placeholder="Create a password" 
               />
